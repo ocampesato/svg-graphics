@@ -1,0 +1,296 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN" 
+  "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+
+<svg width="100%" height="100%" onload="init(evt)"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <script type="text/ecmascript"> 
+    <![CDATA[
+    var basePointX    = 300.;
+    var basePointY    = 250.;
+    var fixedPointX   = 20.;
+    var fixedPointY   = 80.;
+    var currentX      = 0.;
+    var currentY      = 0.;
+    var offsetX       = 0.;
+    var offsetY       = 0.;
+    var radius        = 0.;
+    var minorAxis     = 10.;
+    var majorAxis     = 20.;
+    var Constant      = 200.;
+    var angle         = 0.;
+    var maxAngle      = 720.;
+    var angleDelta    = 3.;
+    var rGap          = 11.;
+    var rWidth        = 2*majorAxis;
+    var rHeight       = 2*minorAxis;
+    var widthDelta    = 4.;
+    var heightDelta   = 2.;
+    var shortPause    = 10.;
+    var strokeWidth   = 2.;
+    var xVertex       = 0.;
+    var yVertex       = 0.;
+    var slantX        = 20.;
+    var slantY        = 10.;
+    var rectCount     = 0.;
+    var points        = "";
+    var style         = "";
+    var points        = "";
+    var arcRadius     = majorAxis;
+    var outerRadius   = 3*majorAxis/2;
+    var innerRadius   = 1*outerRadius/3;
+    var stripCount    = 20;
+    var stripWidth    = Math.floor(maxAngle/stripCount);
+    var frequency     = 5.; 
+    var rVal          = 0.;
+    var gVal          = 0.;
+    var bVal          = 0.;
+ 
+    var rectNode      = null;
+    var circleNode    = null;
+    var polygonNode   = null;
+    var ellipseNode   = null;
+    var theTimeout    = null;
+    var svgDocument   = null;
+    var target        = null;
+    var gcNode        = null;
+
+    var svgNS         = "http://www.w3.org/2000/svg";
+
+    function init(event)
+    {
+       svgDocument = event.target.ownerDocument;
+       gcNode = svgDocument.getElementById("gc");
+
+       drawSpiral(event);
+    }
+
+    function drawSpiral(event) 
+    {
+       for(angle=0; angle<maxAngle; angle+=angleDelta)
+       {
+          radius  = Constant*Constant/angle;
+  
+          offsetX = radius*Math.cos(angle*Math.PI/180);
+          offsetY = radius*Math.sin(angle*Math.PI/180);
+
+          currentX = basePointX+offsetX;
+          currentY = basePointY-offsetY;
+          addEllipse(currentX, currentY);
+
+          currentX = basePointX-offsetX;
+          currentY = basePointY+offsetY;
+          addEllipse(currentX, currentY);
+
+          if( (angle > 0) && (angle % rGap == 0) )
+          {
+             addRectangleNode();
+             rWidth  += widthDelta;
+             rHeight += heightDelta;
+          }
+
+          offsetX = fixedPointX+outerRadius*Math.cos(
+                            frequency*angle*Math.PI/180);
+
+          offsetY = fixedPointY-outerRadius*Math.sin(
+                            frequency*angle*Math.PI/180);
+   
+          points  = "M"+currentX+","+currentY+" ";
+          points += "v-"+arcRadius; 
+          points += " a"+arcRadius+","+arcRadius+" ";
+          points += "0 1,0 "+(-offsetX)+","+(-offsetY)+" z";
+
+          arcPathNode = document.createElementNS(svgNS, "path");
+           
+        //arcPathNode.setAttribute("style",style);
+          arcPathNode.setAttribute("fill", strokeColor);
+          arcPathNode.setAttribute("stroke", "yellow");
+          arcPathNode.setAttribute("stroke-width", strokeWidth);
+
+          arcPathNode.setAttribute("d", points);
+          gcNode.appendChild(arcPathNode);
+       }
+
+    } // drawSpiral
+
+    function addEllipse(event) 
+    {
+       ellipseNode = 
+                svgDocument.createElementNS(svgNS, "ellipse");
+   
+       rVal = angle*255/maxAngle;
+       gVal = 0.;
+       bVal = 0.;
+
+       fillColor = 
+               "rgb("+rVal+","+gVal+","+bVal+")";
+
+       strokeColor = 
+               "rgb("+rVal+","+gVal+","+bVal+")";
+
+     //style  = "fill:"+strokeColor;
+     //style += ";stroke:yellow";
+     //style += ";stroke-width:"+strokeWidth;
+
+     //ellipseNode.setAttribute("style",style);
+       ellipseNode.setAttribute("fill", strokeColor);
+       ellipseNode.setAttribute("stroke", "yellow");
+       ellipseNode.setAttribute("stroke-width", strokeWidth);
+
+       ellipseNode.setAttribute("cx", currentX);
+       ellipseNode.setAttribute("cy", currentY);
+       ellipseNode.setAttribute("rx", majorAxis);
+       ellipseNode.setAttribute("ry", minorAxis);
+  
+       gcNode.appendChild(ellipseNode);
+
+       // attach a lateral circle...
+       offsetX = outerRadius*Math.cos(
+                         frequency*angle*Math.PI/180);
+
+       offsetY = outerRadius*Math.sin(
+                         frequency*angle*Math.PI/180);
+
+       rVal = (angle%stripWidth)*255/stripWidth;
+       gVal = 0;
+       bVal = 0;
+ 
+       fillColor = 
+               "rgb("+rVal+","+gVal+","+bVal+")";
+
+       strokeColor = 
+               "rgb("+rVal+","+gVal+","+bVal+")";
+
+     //style  = "stroke:rgb("+rVal+","+gVal+","+bVal+")";
+     //style += ";fill:rgb("+rVal+","+gVal+","+bVal+")";
+     //style += ";stroke-dasharray:"+dashStyle;
+
+       circleNode = document.createElementNS(svgNS, "circle");
+        
+     //circleNode.setAttribute("style",style);
+       circleNode.setAttribute("fill", fillColor);
+       circleNode.setAttribute("stroke", strokeColor);
+       circleNode.setAttribute("stroke-width", strokeWidth);
+
+       circleNode.setAttribute("cx", currentX+offsetX);
+       circleNode.setAttribute("cy", currentY-offsetY);
+       circleNode.setAttribute("r",  innerRadius);
+
+       gcNode.appendChild(circleNode);
+
+    } // addEllipse
+
+    function addRectangleNode(event) 
+    {
+       rectNode = svgDocument.createElementNS(svgNS, "rect");
+   
+     //style  = "fill:yellow;stroke:red;";
+     //style  = "fill:url(#gradientDefinition2);";
+     //style += "stroke-width:"+strokeWidth;
+
+     //rectNode.setAttribute("style",style);
+       rectNode.setAttribute("fill", "url(#gradientDefinition2)");
+       rectNode.setAttribute("stroke", "red");
+       rectNode.setAttribute("stroke-width", strokeWidth);
+
+       rectNode.setAttribute("x",      
+                             currentX-rWidth/2);
+
+       rectNode.setAttribute("y",      
+                             currentY-rHeight/2);
+
+       rectNode.setAttribute("width",  rWidth);
+       rectNode.setAttribute("height", rHeight);
+
+       gcNode.appendChild(rectNode);
+
+       // top horizontal strip... 
+       polygonNode = svgDocument.createElementNS(svgNS, "polygon");
+ 
+       xVertex = currentX-rWidth/2;
+       yVertex = currentY-rHeight/2;
+       points  = xVertex+" "+yVertex+" ";
+
+       xVertex = currentX-rWidth/2+rWidth;
+       yVertex = currentY-rHeight/2;
+       points  += xVertex+" "+yVertex+" ";
+
+       xVertex  = currentX-rWidth/2+rWidth+slantX;
+       yVertex  = currentY-rHeight/2-slantY;
+       points  += xVertex+" "+yVertex+" ";
+
+       xVertex  = currentX-rWidth/2+slantX;
+       yVertex  = currentY-rHeight/2-slantY;
+       points  += xVertex+" "+yVertex;
+
+     //style  = "fill:black;stroke:red;";
+     //style += "stroke-width:"+strokeWidth;
+
+     //polygonNode.setAttribute("style",style);
+       polygonNode.setAttribute("fill", "black");
+       polygonNode.setAttribute("stroke", "red");
+       polygonNode.setAttribute("stroke-width", strokeWidth);
+
+       polygonNode.setAttribute("points",points);
+       gcNode.appendChild(polygonNode);
+
+       // right vertical strip... 
+       polygonNode = svgDocument.createElementNS(svgNS, "polygon");
+
+       xVertex = currentX-rWidth/2+rWidth;
+       yVertex = currentY-rHeight/2;
+       points  = xVertex+" "+yVertex+" ";
+
+       xVertex  = currentX-rWidth/2+rWidth+slantX;
+       yVertex  = currentY-rHeight/2-slantY;
+       points  += xVertex+" "+yVertex+" ";
+
+       xVertex  = currentX-rWidth/2+rWidth+slantX;
+       yVertex  = currentY-rHeight/2-slantY+rHeight;
+       points  += xVertex+" "+yVertex+" ";
+
+       xVertex  = currentX-rWidth/2+rWidth;
+       yVertex  = currentY-rHeight/2+rHeight;
+       points  += xVertex+" "+yVertex+" ";
+
+       if( rectCount % 2 == 0 ) 
+       {
+          polygonNode.setAttribute("fill", "green");
+          polygonNode.setAttribute("stroke", "red");
+          polygonNode.setAttribute("stroke-width", strokeWidth);
+       }
+       else
+       {
+          polygonNode.setAttribute("fill", "blue");
+          polygonNode.setAttribute("stroke", "red");
+          polygonNode.setAttribute("stroke-width", strokeWidth);
+       }
+
+       ++rectCount;
+
+     //polygonNode.setAttribute("style",style);
+
+       polygonNode.setAttribute("points",points);
+       gcNode.appendChild(polygonNode);
+    }
+
+  ]]> </script>
+
+<!-- ============================ -->
+<defs>
+   <radialGradient id="gradientDefinition2">
+      <stop offset="0%"   stop-color="#C0C040"/>
+      <stop offset="30%"  stop-color="#303000"/>
+      <stop offset="60%"  stop-color="#FF0F0F"/>
+      <stop offset="90%"  stop-color="#101000"/>
+   </radialGradient> 
+</defs>
+
+<g id="gc" transform="translate(10,10)"> 
+  <rect x="0" y="0" 
+        width="800" height="500" 
+        fill="none" stroke="none"/>
+</g>
+
+</svg>

@@ -1,0 +1,246 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN" 
+  "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+
+<svg width="100%" height="100%" onload="init(evt)"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <script type="text/ecmascript"> 
+    <![CDATA[
+    var basePointX    = 400.;
+    var basePointY    = 250.;
+    var fixedPointX   = 10.;
+    var fixedPointY   = 100.;
+    var currentX      = 0.;
+    var currentY      = 0.;
+    var offsetX       = 0.;
+    var offsetY       = 0.;
+    var radius        = 0.;
+    var minorAxis     = 30;
+    var majorAxis     = 80.;
+    var spiralCount   = 4.;
+    var Constant      = 0.25;
+    var colorIndex    = 0.;
+    var angle         = 0.;
+    var maxAngle      = 720.;
+    var angleDelta    = 3.;
+    var shiftAngle    = 0.;
+    var shiftDelta    = 3.;
+    var shortPause    = 10.;
+    var rGap          = 11.;
+    var rWidth        = 2*majorAxis;
+    var rHeight       = 2*minorAxis;
+    var strokeWidth   = 1.;
+    var rStrokeWidth  = 8.;
+    var style         = "";
+    var points        = "";
+    var arcRadius     = majorAxis;
+    var outerRadius   = 3*majorAxis/2;
+    var innerRadius   = 1*outerRadius/3;
+    var stripCount    = 20;
+    var stripWidth    = Math.floor(maxAngle/stripCount);
+    var frequency     = 2.; 
+    var rVal          = 0.;
+    var gVal          = 0.;
+    var bVal          = 0.;
+    var sideLength    = 80.;
+    var vertexCount   = 4.;
+    var baseAngle     = 360/vertexCount;
+    var polygonXPts1  = Array(vertexCount);
+    var polygonYPts1  = Array(vertexCount);
+    var currentXPts1  = Array(vertexCount);
+    var currentYPts1  = Array(vertexCount);
+    var polygonColors = ['red','green',
+                         'blue','yellow'];
+    var colorCount    = 4.;
+ 
+    var arcPathNode   = null;
+    var polygonNode   = null;
+    var circleNode    = null;
+    var ellipseNode   = null;
+    var theTimeout    = null;
+    var svgDocument      = null;
+    var target        = null;
+    var gcNode        = null;
+
+    var svgNS         = "http://www.w3.org/2000/svg";
+
+    function init(event)
+    {
+       svgDocument = event.target.ownerDocument;
+       gcNode = svgDocument.getElementById("gc");
+
+       updatePoints(event);
+       drawSpiral(event);
+    }
+
+    function updatePoints(event) 
+    {
+       // calculate center point...
+       theAngle = baseAngle*Math.PI/180;
+       offsetX  = sideLength*Math.cos(theAngle);
+       offsetY  = sideLength*Math.sin(theAngle);
+       
+       polygonXPts1[0] = basePointX+offsetX/2;
+       polygonYPts1[0] = basePointY+offsetY/2;
+
+       for(var v=0; v<vertexCount-1; v++)
+       {
+          theAngle = (shiftAngle+v*baseAngle)*
+                                    Math.PI/180;
+
+          offsetX = sideLength*Math.cos(theAngle);
+          offsetY = sideLength*Math.sin(theAngle);
+
+          polygonXPts1[v+1] = polygonXPts1[v]+offsetX;
+          polygonYPts1[v+1] = polygonYPts1[v]-offsetY;
+       }
+
+       shiftAngle += shiftDelta; 
+       if( shiftAngle >= 360 ) { shiftAngle = 0; }
+    }
+
+    function drawSpiral(event) 
+    {
+       for(angle=0; angle<maxAngle; angle+=angleDelta)
+       {
+          radius = Constant*angle;
+  
+          offsetX = radius*Math.cos(angle*Math.PI/180);
+          offsetY = radius*Math.sin(angle*Math.PI/180);
+
+          currentX = basePointX+offsetX;
+          currentY = basePointY-offsetY;
+  
+          rVal = angle*255/maxAngle;
+          gVal = 0.;
+          bVal = 0.;
+ 
+          strokeColor = 
+                  "rgb("+rVal+","+gVal+","+bVal+")";
+
+          ellipseNode = 
+                   svgDocument.createElementNS(svgNS, "ellipse");
+ 
+        //ellipseNode.setAttribute("style",style);
+        //style  = "fill:"+strokeColor;
+
+          if( angle % 3 == 0 )
+          {
+             ellipseNode.setAttribute("fill", strokeColor);
+             ellipseNode.setAttribute("stroke", "yellow");
+             ellipseNode.setAttribute("stroke-width", strokeWidth);
+          }
+          else
+          {
+             ellipseNode.setAttribute("fill", strokeColor);
+             ellipseNode.setAttribute("stroke", "green");
+             ellipseNode.setAttribute("stroke-width", strokeWidth);
+          }
+
+          ellipseNode.setAttribute("cx", currentX);
+          ellipseNode.setAttribute("cy", currentY);
+          ellipseNode.setAttribute("rx", majorAxis);
+          ellipseNode.setAttribute("ry", minorAxis);
+   
+          gcNode.appendChild(ellipseNode);
+   
+          // attach a lateral circle...
+          offsetX = fixedPointX+outerRadius*Math.cos(
+                            frequency*angle*Math.PI/180);
+
+          offsetY = fixedPointY-outerRadius*Math.sin(
+                            frequency*angle*Math.PI/180);
+
+          currentX += offsetX;
+          currentY -= offsetY;
+
+          rVal = (angle%stripWidth)*255/stripWidth;
+          gVal = 0;
+          bVal = 0;
+    
+          strokeColor = 
+                  "rgb("+rVal+","+gVal+","+bVal+")";
+
+        //style  = "stroke:white";
+        //style += ";fill:rgb("+rVal+","+gVal+","+bVal+")";
+   
+          points  = "M"+currentX+","+currentY+" ";
+          points += "Q"+(currentX+20)+","+currentY+" ";
+          points += (currentX+40)+","+(currentY+40)+" ";
+          points += "T"+(currentX+60)+","+(currentY+40)+" ";
+          points += "M"+(currentX+10)+","+(currentY+10)+" ";
+          points += "Q"+(currentX+40)+","+(currentY)+" ";
+          points += (currentX+40)+","+(currentY+40)+" ";
+          points += "T"+(offsetX)+","+(offsetY)+" z";
+
+          arcPathNode = document.createElementNS(svgNS, "path");
+           
+        //arcPathNode.setAttribute("style",style);
+          arcPathNode.setAttribute("fill", strokeColor);
+          arcPathNode.setAttribute("stroke", "white");
+
+          arcPathNode.setAttribute("d", points);
+          gcNode.appendChild(arcPathNode);
+
+          if( angle % rGap == 0 )
+          {
+             addPolygonNode();
+             updatePoints(event);
+          }
+       }
+
+    } // drawSpiral
+
+    function addPolygonNode() 
+    {
+       for(var v=0; v<vertexCount; v++)
+       {
+          currentXPts1[v] = polygonXPts1[v]+offsetX;
+          currentYPts1[v] = polygonYPts1[v]-offsetY;
+       }
+
+       points = "";
+       for(var v=0; v<vertexCount; v++)
+       {
+          points += currentXPts1[v]+" ";
+          points += currentYPts1[v]+" ";
+       }
+
+       polygonNode = svgDocument.createElementNS(svgNS, "polygon");
+
+       if( colorIndex == 0 ) 
+       {
+          polygonNode.setAttribute("fill", "blue");
+          polygonNode.setAttribute("stroke", "red");
+       }
+       else
+       {
+          polygonNode.setAttribute("fill", "green");
+          polygonNode.setAttribute("stroke", "yellow");
+       }
+
+       colorIndex = 1 - colorIndex;
+
+     //style += "stroke-width:"+rStrokeWidth;
+     //style += ";stroke-dasharray:4 4 4 4";
+     //polygonNode.setAttribute("style",style);
+
+       polygonNode.setAttribute("stroke-width", rStrokeWidth);
+       polygonNode.setAttribute("stroke-dasharray", "4 4 4 4");
+
+       polygonNode.setAttribute("points", points);
+      
+       gcNode.appendChild(polygonNode);
+    }
+
+  ]]> </script>
+
+<!-- ============================ -->
+<g id="gc" transform="translate(10,10)"> 
+  <rect x="0" y="0" 
+        width="800" height="500" 
+        fill="none" stroke="none"/>
+</g>
+
+</svg>

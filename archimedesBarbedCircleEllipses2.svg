@@ -1,0 +1,213 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN" 
+  "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+
+<svg width="100%" height="100%" onload="init(evt)"
+     xmlns="http://www.w3.org/2000/svg">
+  <script type="text/ecmascript"> 
+    <![CDATA[
+    var width         = 800.;
+    var height        = 500.;
+    var basePointX    = 300.;
+    var basePointY    = 180.;
+    var currentX      = 0.;
+    var currentY      = 0.;
+    var offsetX       = 0.;
+    var offsetY       = 0.;
+    var radius        = 0.;
+    var minorAxis     = 32;
+    var majorAxis     = 10.;
+    var spiralCount   = 4.;
+    var Constant      = 0.25;
+    var angle         = 0.;
+    var maxAngle      = 720.;
+    var angleDelta    = 4.;
+    var shortPause    = 10.;
+    var strokeWidth   = 1.;
+    var style         = "";
+    var arcStyle      = "";
+    var points        = "";
+    var arcX          = 30.;
+    var arcY          = 30.;
+    var rVal          = 0.;
+    var gVal          = 0.;
+    var bVal          = 0.;
+ 
+    var ellipseNode   = null;
+    var circleNode    = null;
+    var pathNode      = null;
+    var rectNode      = null;
+    var svgDocument   = null;
+    var target        = null;
+    var gcNode        = null;
+
+    var svgNS         = "http://www.w3.org/2000/svg";
+
+    function init(event)
+    {
+       svgDocument = event.target.ownerDocument;
+       gcNode = svgDocument.getElementById("gc");
+
+       drawSpiral(event);
+    }
+
+    function drawSpiral(event) 
+    {
+       for(angle=0; angle<maxAngle; angle+=angleDelta)
+       {
+          radius = Constant*angle;
+  
+          offsetX = radius*Math.cos(angle*Math.PI/180);
+          offsetY = radius*Math.sin(angle*Math.PI/180);
+
+          currentX = basePointX+offsetX;
+          currentY = basePointY-offsetY;
+  
+          rVal = angle*255/maxAngle;
+          gVal = 0.;
+          bVal = 0.;
+ 
+          strokeColor = 
+                  "rgb("+rVal+","+gVal+","+bVal+")";
+
+          style  = "fill:"+strokeColor;
+          style += ";stroke:yellow";
+          style += ";stroke-width:"+strokeWidth;
+
+          ellipseNode =
+                   svgDocument.createElementNS(svgNS, "ellipse");
+ 
+//        ellipseNode.setAttribute("style",style);
+          ellipseNode.setAttribute("fill", strokeColor);
+          ellipseNode.setAttribute("stroke", "yellow");
+          ellipseNode.setAttribute("stroke-width", strokeWidth);
+
+          ellipseNode.setAttribute("cx", currentX);
+          ellipseNode.setAttribute("cy", currentY);
+          ellipseNode.setAttribute("rx", majorAxis);
+          ellipseNode.setAttribute("ry", minorAxis);
+   
+          gcNode.appendChild(ellipseNode);
+
+          addBarbedCircleangle();
+       }
+
+    } // drawSpiral
+
+    function addBarbedCircleangle()
+    {
+       circleNode = svgDocument.createElementNS(svgNS, "circle");
+ 
+     //circleStyle = "fill:black;stroke:blue;stroke-width:2";
+     //circleNode.setAttribute("style",circleStyle);
+
+       circleNode.setAttribute("fill", "black");
+       circleNode.setAttribute("stroke", "blue");
+       circleNode.setAttribute("stroke-width", 2);
+
+       circleNode.setAttribute("cx",currentX);
+       circleNode.setAttribute("cy",currentY);
+       circleNode.setAttribute("r", 3*arcX/4);
+   
+       gcNode.appendChild(circleNode);
+
+       // <path d="M0,0 v-30 a60,30 0 0,1 -60,30 z" 
+       // upper quadrants 
+       points  = "M"+(currentX)+","+currentY+" ";
+       points += "v"+(-arcY)+" ";
+       points += "a"+(2*arcX)+","+(arcY)+" 0 0,1 ";
+       points += (-2*arcX)+","+(arcY)+" z";
+ 
+//     pathNode = svgDocument.createElement("path");
+//     arcStyle = "fill:red;stroke:blue;stroke-width:2";
+//     pathNode.setAttribute("style",arcStyle);
+
+       pathNode = svgDocument.createElementNS(svgNS, "path");
+       pathNode.setAttribute("fill", strokeColor);
+       pathNode.setAttribute("stroke", "yellow");
+       pathNode.setAttribute("stroke-width", strokeWidth);
+
+       pathNode.setAttribute("d", points);
+   
+       gcNode.appendChild(pathNode);
+
+       //<path d="M0,0 v-30 a60,30 0 0,0 60,30 z"
+       points  = "M"+(currentX)+","+currentY+" ";
+       points += "v"+(-arcY)+" ";
+       points += "a"+(2*arcX)+","+(arcY)+" 0 0,0 ";
+       points += (2*arcX)+","+(arcY)+" z";
+ 
+     //pathNode = svgDocument.createElement("path");
+     //pathNode.setAttribute("style",style);
+
+       pathNode = svgDocument.createElementNS(svgNS, "path");
+       pathNode.setAttribute("fill", strokeColor);
+       pathNode.setAttribute("stroke", "yellow");
+       pathNode.setAttribute("stroke-width", strokeWidth);
+
+       pathNode.setAttribute("d", points);
+   
+       gcNode.appendChild(pathNode);
+
+       // <path d="M0,0 v30 a60,30 0 0,0 -60,-30 z"
+       points  = "M"+(currentX)+","+currentY+" ";
+       points += "v"+(arcY)+" ";
+       points += "a"+(2*arcX)+","+(arcY)+" 0 0,0 ";
+       points += (-2*arcX)+","+(-arcY)+" z";
+ 
+     //pathNode = svgDocument.createElement("path");
+     //pathNode.setAttribute("style",style);
+
+       pathNode = svgDocument.createElementNS(svgNS, "path");
+       pathNode.setAttribute("fill", strokeColor);
+       pathNode.setAttribute("stroke", "yellow");
+       pathNode.setAttribute("stroke-width", strokeWidth);
+       pathNode.setAttribute("d", points);
+   
+       gcNode.appendChild(pathNode);
+
+       // <path d="M0,0 v30 a60,30 0 0,1 60,-30 z"
+       points  = "M"+(currentX)+","+(currentY)+" ";
+       points += "v"+(arcY)+" ";
+       points += "a"+(2*arcX)+","+(arcY)+" 0 0,1 ";
+       points += (2*arcX)+","+(-arcY)+" z";
+ 
+     //pathNode = svgDocument.createElement("path");
+     //pathNode.setAttribute("style",style);
+
+       pathNode = svgDocument.createElementNS(svgNS, "path");
+       pathNode.setAttribute("fill", strokeColor);
+       pathNode.setAttribute("stroke", "yellow");
+       pathNode.setAttribute("stroke-width", strokeWidth);
+       pathNode.setAttribute("d", points);
+   
+       gcNode.appendChild(pathNode);
+
+       // <circle cx="0" cy="0" r="10"
+       // fill="black" stroke="blue" stroke-width="2"/>
+     //circleStyle = "fill:black;stroke:blue;stroke-width:2";
+     //circleNode = svgDocument.createElement("circle");
+     //circleNode.setAttribute("style",circleStyle);
+
+       circleNode = svgDocument.createElementNS(svgNS, "circle");
+       circleNode.setAttribute("fill", "black");
+       circleNode.setAttribute("stroke", "blue");
+       circleNode.setAttribute("stroke-width", 2);
+
+       circleNode.setAttribute("cx",currentX);
+       circleNode.setAttribute("cy",currentY);
+       circleNode.setAttribute("r", arcX/3);
+   
+       gcNode.appendChild(circleNode);
+    }
+
+  ]]> </script>
+
+<!-- ============================ -->
+<g id="gc" transform="translate(10,10)"> 
+  <rect x="0" y="0" 
+        width="800" height="500" 
+        fill="none" stroke="none"/>
+</g>
+
+</svg>

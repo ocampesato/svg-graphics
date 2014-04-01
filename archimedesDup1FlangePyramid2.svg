@@ -1,0 +1,314 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN" 
+  "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+
+<svg width="100%" height="100%" onload="init(evt)"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <script type="text/ecmascript"> 
+    <![CDATA[
+
+    var width         = 800.;
+    var height        = 500.;
+    var basePointX    = 300.;
+    var basePointY    = 250.;
+    var currentX      = 0.;
+    var currentY      = 0.;
+    var offsetX       = 0.;
+    var offsetY       = 0.;
+    var radius        = 0.;
+    var minorAxis     = 12;
+    var majorAxis     = 20.;
+    var shiftUp       = 2*minorAxis;
+    var spiralCount   = 4.;
+    var Constant      = 0.25;
+    var angle         = 0.;
+    var maxAngle      = 720.;
+    var angleDelta    = 4.;
+    var shortPause    = 10.;
+    var strokeWidth   = 1.;
+    var style         = "";
+    var opacity       = 0.5;
+    var midPointX     = 0.;
+    var midPointY     = 0.;
+    var tetraHeight   = 2*majorAxis;
+    var tVertexCount  = 4.;
+    var tetraXPts     = Array(tVertexCount);
+    var tetraYPts     = Array(tVertexCount);
+    var sideXPts      = Array(tVertexCount);
+    var sideYPts      = Array(tVertexCount);
+    var scaledXPts    = Array(tVertexCount);
+    var scaledYPts    = Array(tVertexCount);
+    var thickness     = 10;
+    var deltaGroup    = 3;
+    var rVal          = 0.;
+    var gVal          = 0.;
+    var bVal          = 0.;
+ 
+    var ellipseNode   = null;
+    var pGramNode     = null;
+    var triangleNode  = null;
+    var theTimeout    = null;
+    var svgDocument   = null;
+    var target        = null;
+    var gcNode        = null;
+
+    var svgNS         = "http://www.w3.org/2000/svg";
+
+    function init(event)
+    {
+       svgDocument = event.target.ownerDocument;
+       gcNode = svgDocument.getElementById("gc");
+
+       drawSpiral(event);
+    }
+
+    function drawSpiral(event) 
+    {
+       for(angle=0; angle<maxAngle; angle+=angleDelta)
+       {
+          radius = Constant*angle;
+  
+          offsetX = radius*Math.cos(angle*Math.PI/180);
+          offsetY = radius*Math.sin(angle*Math.PI/180);
+
+          currentX = basePointX+offsetX;
+          currentY = basePointY-offsetY;
+  
+          rVal = angle*255/maxAngle;
+          gVal = 0.;
+          bVal = 0.;
+ 
+          strokeColor = 
+                  "rgb("+rVal+","+gVal+","+bVal+")";
+
+        //style  = "fill:"+strokeColor;
+        //style += ";stroke:yellow";
+        //style += ";stroke-width:"+strokeWidth;
+
+          ellipseNode = 
+                   svgDocument.createElementNS(svgNS, "ellipse");
+ 
+        //ellipseNode.setAttribute("style",style);
+          ellipseNode.setAttribute("fill", strokeColor);
+          ellipseNode.setAttribute("stroke", "yellow");
+          ellipseNode.setAttribute("stroke-width", strokeWidth);
+
+          ellipseNode.setAttribute("cx", currentX);
+          ellipseNode.setAttribute("cy", currentY);
+          ellipseNode.setAttribute("rx", majorAxis);
+          ellipseNode.setAttribute("ry", minorAxis);
+   
+          gcNode.appendChild(ellipseNode);
+
+          ellipseNode = 
+                   svgDocument.createElementNS(svgNS, "ellipse");
+ 
+          currentX = basePointX+offsetX;
+          currentY = basePointY-offsetY-shiftUp;
+  
+        //ellipseNode.setAttribute("style",style);
+          ellipseNode.setAttribute("fill", strokeColor);
+          ellipseNode.setAttribute("stroke", "yellow");
+          ellipseNode.setAttribute("stroke-width", strokeWidth);
+
+          ellipseNode.setAttribute("cx", currentX);
+          ellipseNode.setAttribute("cy", currentY);
+          ellipseNode.setAttribute("rx", majorAxis);
+          ellipseNode.setAttribute("ry", minorAxis);
+   
+          gcNode.appendChild(ellipseNode);
+
+          // base parallelogram (clockwise)
+          tetraXPts[0] = basePointX+offsetX;
+          tetraYPts[0] = basePointY-offsetY-shiftUp;
+
+          tetraXPts[1] = basePointX+offsetX+2*majorAxis;
+          tetraYPts[1] = basePointY-offsetY-shiftUp;
+
+          tetraXPts[2] = basePointX+offsetX+majorAxis;
+          tetraYPts[2] = basePointY-offsetY-shiftUp+tetraHeight/2;
+
+          tetraXPts[3] = basePointX+offsetX-majorAxis;
+          tetraYPts[3] = basePointY-offsetY-shiftUp+tetraHeight/2;
+
+          midPointX = (tetraXPts[0]+tetraXPts[2])/2;
+          midPointY = (tetraYPts[0]+tetraYPts[2])/2;
+ 
+          points = "";
+          for(var v=0; v<tVertexCount; v++)
+          {
+             points += tetraXPts[v]+","+tetraYPts[v]+" ";
+          }
+
+          pGramNode = svgDocument.createElementNS(svgNS, "polygon");
+ 
+        //pGramNode.setAttribute("style", style);
+          pGramNode.setAttribute("fill", strokeColor);
+          pGramNode.setAttribute("stroke", "yellow");
+          pGramNode.setAttribute("stroke-width", strokeWidth);
+          pGramNode.setAttribute("points",points);
+
+          gcNode.appendChild(pGramNode);
+
+          // rear triangle...
+          sideXPts[0] = tetraXPts[0];
+          sideYPts[0] = tetraYPts[0];
+
+          sideXPts[1] = tetraXPts[1];
+          sideYPts[1] = tetraYPts[1];
+
+          sideXPts[2] = midPointX;
+          sideYPts[2] = midPointY-2*tetraHeight;
+
+          points = "";
+          for(var v=0; v<3; v++)
+          {
+             points += sideXPts[v]+","+sideYPts[v]+" ";
+          }
+
+          triangleNode = 
+                   svgDocument.createElementNS(svgNS, "polygon");
+ 
+        //triangleNode.setAttribute("style", "fill:green");
+          triangleNode.setAttribute("fill", "green");
+          triangleNode.setAttribute("points",points);
+
+          gcNode.appendChild(triangleNode);
+
+          // left triangle...
+          sideXPts[0] = tetraXPts[0];
+          sideYPts[0] = tetraYPts[0];
+
+          sideXPts[1] = tetraXPts[3];
+          sideYPts[1] = tetraYPts[3];
+
+          sideXPts[2] = midPointX;
+          sideYPts[2] = midPointY-2*tetraHeight;
+
+          points = "";
+          for(var v=0; v<3; v++)
+          {
+             points += sideXPts[v]+","+sideYPts[v]+" ";
+          }
+
+          triangleNode = 
+                   svgDocument.createElementNS(svgNS, "polygon");
+ 
+        //triangleNode.setAttribute("style", "fill:blue");
+          triangleNode.setAttribute("fill", "blue");
+          triangleNode.setAttribute("points",points);
+
+          gcNode.appendChild(triangleNode);
+
+          // front triangle...
+          sideXPts[0] = tetraXPts[2];
+          sideYPts[0] = tetraYPts[2];
+
+          sideXPts[1] = tetraXPts[3];
+          sideYPts[1] = tetraYPts[3];
+
+          sideXPts[2] = midPointX;
+          sideYPts[2] = midPointY-2*tetraHeight;
+
+          points = "";
+          for(var v=0; v<3; v++)
+          {
+             points += sideXPts[v]+","+sideYPts[v]+" ";
+          }
+
+          triangleNode = 
+                   svgDocument.createElementNS(svgNS, "polygon");
+ 
+        //triangleNode.setAttribute("style", style);
+          triangleNode.setAttribute("fill", strokeColor);
+          triangleNode.setAttribute("stroke", "yellow");
+          triangleNode.setAttribute("stroke-width", strokeWidth);
+          triangleNode.setAttribute("points",points);
+          triangleNode.setAttribute("opacity",opacity);
+
+          gcNode.appendChild(triangleNode);
+
+          // right triangle...
+          sideXPts[0] = tetraXPts[1];
+          sideYPts[0] = tetraYPts[1];
+
+          sideXPts[1] = tetraXPts[2];
+          sideYPts[1] = tetraYPts[2];
+
+          sideXPts[2] = midPointX;
+          sideYPts[2] = midPointY-2*tetraHeight;
+ 
+          points = "";
+          for(var v=0; v<3; v++)
+          {
+             points += sideXPts[v]+","+sideYPts[v]+" ";
+          }
+
+          style  = "fill:black";
+          style += ";stroke:yellow";
+          style += ";stroke-width:"+strokeWidth;
+
+          triangleNode = 
+                   svgDocument.createElementNS(svgNS, "polygon");
+ 
+        //triangleNode.setAttribute("style", style);
+          triangleNode.setAttribute("fill", strokeColor);
+          triangleNode.setAttribute("stroke", "yellow");
+          triangleNode.setAttribute("stroke-width", strokeWidth);
+          triangleNode.setAttribute("points",points);
+          triangleNode.setAttribute("opacity",opacity);
+
+          gcNode.appendChild(triangleNode);
+
+          // render parallel triangles...
+          midPointX = (sideXPts[0]+sideXPts[2])/2;
+          midPointY = (sideYPts[0]+sideYPts[2])/2;
+ 
+          points = "";
+          for(var v=0; v<3; v++)
+          {
+             scaledXPts[v] = (sideXPts[v]+midPointX)/2;
+             scaledYPts[v] = (sideYPts[v]+midPointY)/2;
+          }
+
+          for(var z=0; z<thickness; z+=deltaGroup)
+          {
+             points = "";
+             for(var v=0; v<3; v++)
+             {
+                points += (scaledXPts[v]+z)+","+
+                          (scaledYPts[v])+" ";
+             }
+
+             style  = "fill:black";
+             style += ";stroke:yellow";
+             style += ";stroke-width:"+strokeWidth;
+
+             triangleNode = 
+                      svgDocument.createElementNS(svgNS, "polygon");
+ 
+           //triangleNode.setAttribute("style", style);
+             triangleNode.setAttribute("fill", "black");
+             triangleNode.setAttribute("stroke", "yellow");
+             triangleNode.setAttribute("stroke-width", strokeWidth);
+             triangleNode.setAttribute("points",points);
+             triangleNode.setAttribute("opacity",opacity);
+
+             gcNode.appendChild(triangleNode);
+          }
+       }
+
+    } // drawSpiral
+
+  ]]> </script>
+
+
+<!-- ============================ -->
+<g id="gc" transform="translate(10,10)"> 
+  <rect x="0" y="0" 
+        width="800" height="500" 
+        fill="none" stroke="none"/>
+</g>
+
+</svg>

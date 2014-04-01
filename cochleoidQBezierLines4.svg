@@ -1,0 +1,158 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN" 
+  "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+
+<svg width="100%" height="100%" onload="init(evt)"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <script type="text/ecmascript"> 
+    <![CDATA[
+    var basePointX    = 150.;
+    var basePointY    = 250.;
+    var currentX      = 0.;
+    var currentY      = 0.;
+    var offsetX       = 0.;
+    var offsetY       = 0.;
+    var slantX        = 0.;
+    var slantY        = 0.;
+    var slantAngle    = 20.;
+    var slantLength   = 100.;
+    var points        = "";
+    var radius        = 0.;
+    var minorAxis     = 10.;
+    var majorAxis     = 20.;
+    var Constant      = 20000.;
+    var hGap          = 2.;
+    var angle         = 0.;
+    var maxAngle      = 360.;
+    var angleDelta    = 2.;
+    var shortPause    = 10.;
+    var strokeWidth   = 2.;
+    var style         = "";
+    var circleColors  = ['red','green','blue',
+                         'yellow','white','magenta'];
+    var colorCount    = 6.;
+ 
+    var bezierNode    = null;
+    var ellipseNode   = null;
+    var theTimeout    = null;
+    var svgDocument   = null;
+    var target        = null;
+    var gcNode        = null;
+
+    var svgNS         = "http://www.w3.org/2000/svg";
+
+    function init(event)
+    {
+       slantX = slantLength*Math.cos(
+                            slantAngle*Math.PI/180);
+
+       slantY = slantLength*Math.sin(
+                            slantAngle*Math.PI/180);
+
+       svgDocument = event.target.ownerDocument;
+       gcNode = svgDocument.getElementById("gc");
+
+       drawSpiral(event);
+    }
+
+    function drawSpiral(event) 
+    {
+       for(angle=1; angle<maxAngle; angle+=angleDelta)
+       {
+          radius = Constant*
+                    Math.sin(angle*Math.PI/180)/angle;
+  
+          offsetX = radius*Math.cos(angle*Math.PI/180);
+          offsetY = radius*Math.sin(angle*Math.PI/180);
+
+          currentX = basePointX+offsetX;
+          currentY = basePointY-offsetY;
+  
+          points  = "M"+currentX+","+currentY+" ";
+          points += "Q"+(currentX+50)+","+currentY+" ";
+          points += (currentX+100)+","+(currentY+100)+" ";
+          points += "T"+(currentX+150)+","+(currentY+100)+" z";
+
+          bezierNode = 
+                   svgDocument.createElementNS(svgNS, "path");
+
+        //bezierNode.setAttribute("style",style);
+          bezierNode.setAttribute("fill", "none");
+        //bezierNode.setAttribute("stroke", "red");
+
+          if((angle-1)/angleDelta % 2 == 0) 
+          {
+             bezierNode.setAttribute("stroke", "black");
+          }
+          else
+          {
+             bezierNode.setAttribute("stroke", "red");
+          }
+
+          bezierNode.setAttribute("stroke-width", strokeWidth);
+
+          bezierNode.setAttribute("d",points);
+
+          gcNode.appendChild(bezierNode);
+
+          ellipseNode = 
+                   svgDocument.createElementNS(svgNS, "ellipse");
+   
+        //style  = "fill:none;stroke:red;";
+        //style += "stroke-width:"+strokeWidth;
+
+        //ellipseNode.setAttribute("style",style);
+          ellipseNode.setAttribute("fill", "none");
+          ellipseNode.setAttribute("stroke", "yellow");
+          ellipseNode.setAttribute("stroke-width", strokeWidth);
+
+          ellipseNode.setAttribute("cx", currentX);
+          ellipseNode.setAttribute("cy", currentY);
+          ellipseNode.setAttribute("rx", majorAxis);
+          ellipseNode.setAttribute("ry", minorAxis);
+  
+          if( angle/angleDelta % hGap == 0 )
+          {
+             addLine(currentX, currentY);
+          } 
+
+          gcNode.appendChild(ellipseNode);
+       }
+
+    } // drawSpiral
+
+    function addLine(currentX, currentY)
+    {
+     //style  = "stroke:";
+     //style += circleColors[angle%colorCount];
+     //style += ";stroke-width:"+strokeWidth;
+   
+       lineNode = svgDocument.createElementNS(svgNS, "line");
+     //lineNode.setAttribute("style",style);
+
+       lineNode.setAttribute("stroke", circleColors[angle%colorCount]);
+       lineNode.setAttribute("stroke-width", strokeWidth);
+       lineNode.setAttribute("stroke-dasharray", dashStyle);
+
+       lineNode.setAttribute("x1", currentX);
+       lineNode.setAttribute("y1", currentY);
+       lineNode.setAttribute("x2", 
+                             currentX-slantX);
+       lineNode.setAttribute("y2", 
+                             currentY-slantY);
+   
+       gcNode.appendChild(lineNode);
+
+    } // addLine
+
+  ]]> </script>
+
+<!-- ============================ -->
+<g id="gc" transform="translate(10,10)"> 
+  <rect x="0" y="0" 
+        width="800" height="500" 
+        fill="none" stroke="none"/>
+</g>
+
+</svg>
